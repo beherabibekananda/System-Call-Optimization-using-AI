@@ -1,0 +1,52 @@
+{
+  "feature_columns": [
+    "lat_mean",
+    "lat_std",
+    "lat_max",
+    "syscall_count",
+    "cpu_mean",
+    "cpu_max",
+    "mem_mean",
+    "mem_max",
+    "ctx_sum",
+    "high_lat_count",
+    "redundant_count",
+    "risk_mean",
+    "efficiency",
+    "high_lat_ratio",
+    "redundancy_ratio",
+    "latency_cv",
+    "process_type_encoded"
+  ],
+  "training_metrics": {
+    "timestamp": "2026-02-17T23:10:52.649495",
+    "samples_trained": 16,
+    "throughput_model": {
+      "r2_score": 0.8396618194616225,
+      "mae": 1.8926000032529184
+    },
+    "resource_optimizer": {
+      "cpu_r2": 0.6192060647776159,
+      "memory_r2": 0.5147247386614822
+    },
+    "feature_columns": [
+      "lat_mean",
+      "lat_std",
+      "lat_max",
+      "syscall_count",
+      "cpu_mean",
+      "cpu_max",
+      "mem_mean",
+      "mem_max",
+      "ctx_sum",
+      "high_lat_count",
+      "redundant_count",
+      "risk_mean",
+      "efficiency",
+      "high_lat_ratio",
+      "redundancy_ratio",
+      "latency_cv",
+      "process_type_encoded"
+    ]
+  }
+}

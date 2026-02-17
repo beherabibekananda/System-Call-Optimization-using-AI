@@ -1,0 +1,45 @@
+{
+  "feature_columns": [
+    "syscall_name_encoded",
+    "category_encoded",
+    "latency_us",
+    "base_latency_us",
+    "latency_ratio",
+    "latency_log",
+    "cpu_usage",
+    "memory_usage",
+    "cpu_memory_ratio",
+    "context_switches",
+    "risk_level",
+    "efficiency_score",
+    "process_type_encoded"
+  ],
+  "training_metrics": {
+    "timestamp": "2026-02-17T23:10:52.367621",
+    "samples_trained": 6400,
+    "samples_tested": 1600,
+    "latency_model": {
+      "auc_roc": 1.0,
+      "accuracy": 1.0
+    },
+    "optimization_model": {
+      "auc_roc": 1.0,
+      "accuracy": 0.999375
+    },
+    "feature_importance": {
+      "syscall_name_encoded": 4.9686137812618414e-17,
+      "category_encoded": 0.0,
+      "latency_us": 1.81712877348873e-14,
+      "base_latency_us": 4.0656518627843936e-17,
+      "latency_ratio": 0.9999999999999727,
+      "latency_log": 1.65946356865983e-17,
+      "cpu_usage": 7.599961747596798e-17,
+      "memory_usage": 3.089065345127487e-15,
+      "cpu_memory_ratio": 5.898834927466911e-15,
+      "context_switches": 0.0,
+      "risk_level": 1.4249141766711018e-17,
+      "efficiency_score": 7.277565235001499e-17,
+      "process_type_encoded": -2.478111611601916e-18
+    }
+  }
+}

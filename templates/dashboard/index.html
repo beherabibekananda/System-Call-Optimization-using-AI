@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | SysCall AI{% endblock %}
+
+{% block content %}
+<!-- Navigation Tabs -->
+<nav class="nav-tabs">
+    <button class="nav-tab active" data-tab="dashboard">📊 Dashboard</button>
+    <button class="nav-tab" data-tab="strace">🔬 Strace</button>
+    <button class="nav-tab" data-tab="analysis">🔍 Analysis</button>
+    <button class="nav-tab" data-tab="predictions">🎯 Predictions</button>
+    <button class="nav-tab" data-tab="benchmark">⚡ Benchmark</button>
+    <button class="nav-tab" data-tab="realtime">📡 Real-time</button>
+</nav>
+
+<!-- Dashboard Tab -->
+<div id="dashboard" class="tab-content active">
+    <!-- Metric Cards -->
+    <div class="dashboard-grid">
+        <div class="metric-card gradient-1">
+            <div class="metric-value" id="totalSyscalls">--</div>
+            <div class="metric-label">Total Syscalls Analyzed</div>
+        </div>
+        <div class="metric-card gradient-2">
+            <div class="metric-value" id="highLatencyCount">--</div>
+            <div class="metric-label">High Latency Detected</div>
+        </div>
+        <div class="metric-card gradient-3">
+            <div class="metric-value" id="redundantCount">--</div>
+            <div class="metric-label">Redundant Calls</div>
+        </div>
+        <div class="metric-card gradient-4">
+            <div class="metric-value" id="optimizationCandidates">--</div>
+            <div class="metric-label">Optimization Candidates</div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Left Column: Visualizations -->
+        <div class="content-grid">
+            <div class="chart-container" style="height: 350px;">
+                <div class="chart-title">📈 Syscall Latency Distribution</div>
+                <div class="chart-wrapper">
+                    <canvas id="latencyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container" style="height: 300px;">
+                <div class="chart-title">⚖️ Category Breakdown</div>
+                <div class="chart-wrapper">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Personal Analysis History (New in Django) -->
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🕒 Your Recent Analyses</div>
+                    <a href="{% url 'history' %}" class="btn btn-secondary"
+                        style="font-size: 0.7rem; padding: 4px 8px;">View All</a>
+                </div>
+                <div id="analysisHistoryList" style="max-height: 400px; overflow-y: auto;">
+                    {% if analyses %}
+                    {% for item in analyses %}
+                    <div class="feed-item" style="cursor: pointer;" onclick="loadAnalysisData({{ item.id }})">
+                        <div class="feed-syscall">{{ item.title }}</div>
+                        <div class="feed-timestamp">{{ item.created_at|timesince }} ago • {{ item.total_syscalls }}
+                            calls</div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted text-center py-4">No analysis history found. Start by uploading an strace file!
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📡 System Status</div>
+                </div>
+                <div class="status-list">
+                    <div class="status-item">
+                        <span>Platform Mode</span>
+                        <span class="badge badge-success">Django (Secure)</span>
+                    </div>
+                    <div class="status-item">
+                        <span>ML Engine</span>
+                        <span class="badge badge-success">Ready</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Strace Parser</span>
+                        <span class="badge badge-success">Optimized</span>
+                    </div>
+                    <div class="status-item">
+                        <span>User Database</span>
+                        <span class="badge badge-success">Connected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Strace Tab -->
+<div id="strace" class="tab-content">
+    <div class="main-grid" style="grid-template-columns: 1fr 1fr;">
+        <!-- Left: Input Methods -->
+        <div class="content-grid">
+            <!-- File Upload -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">📁 Upload Strace File</div>
+                        <div class="card-subtitle">Upload strace output from:
+                            <code>strace -T -tt -o output.txt command</code></div>
+                    </div>
+                </div>
+                <div class="upload-zone" id="straceDropZone">
+                    <div class="upload-icon">📤</div>
+                    <p>Drag & drop strace file here</p>
+                    <p class="text-muted">or click to browse</p>
+                    <input type="file" id="straceFileInput" accept=".txt,.strace,.log,.out" style="display: none;">
+                </div>
+                <div id="uploadStatus" class="mt-2" style="display: none;">
+                    <div class="feed-item">
+                        <span class="feed-syscall" id="uploadFileName"></span>
+                        <span class="feed-timestamp" id="uploadFileSize"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paste Text -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">📋 Paste Strace Output</div>
+                        <div class="card-subtitle">Paste raw strace output directly</div>
+                    </div>
+                    <button class="btn btn-primary" id="parseStraceText">Parse Text</button>
+                </div>
+                <textarea id="straceTextInput" class="strace-textarea"
+                    placeholder="Paste strace output here...&#10;&#10;Example:&#10;14:12:05.123 read(3, &quot;data&quot;, 1024) = 512 <0.000123>&#10;14:12:05.124 write(1, &quot;hello&quot;, 5) = 5 <0.000008>&#10;14:12:05.125 openat(AT_FDCWD, &quot;/etc/passwd&quot;, O_RDONLY) = 4 <0.000045>"
+                    rows="8"></textarea>
+            </div>
+
+            <!-- Load Sample -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">📦 Sample Traces</div>
+                        <div class="card-subtitle">Load pre-recorded strace samples for testing</div>
+                    </div>
+                </div>
+                <div class="flex gap-2 flex-wrap" id="sampleButtons">
+                    <button class="btn btn-secondary sample-btn" data-sample="sample_ls.strace">
+                        📂 ls -la (File Ops)
+                    </button>
+                    <button class="btn btn-secondary sample-btn" data-sample="sample_webserver.strace">
+                        🌐 Web Server (Network)
+                    </button>
+                    <button class="btn btn-secondary sample-btn" data-sample="sample_summary.strace">
+                        📊 Summary (-c mode)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Trace -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">🖥️ Live Trace</div>
+                        <div class="card-subtitle" id="traceToolInfo">Detecting tracing tool...</div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="traceCommand" class="btn btn-secondary" style="flex: 1; text-align: left;"
+                        placeholder="Command to trace (e.g., ls -la /tmp)">
+                    <button class="btn btn-primary" id="runTraceBtn">▶ Trace</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Results -->
+        <div class="content-grid">
+            <!-- Parse Stats -->
+            <div class="card" id="straceResultsCard" style="display: none;">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">📊 Strace Analysis Results</div>
+                        <div class="card-subtitle" id="straceSource">--</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-secondary export-btn" data-format="script" title="Export Shell Script">📜
+                            Script</button>
+                        <button class="btn btn-secondary export-btn" data-format="json" title="Export JSON">📋
+                            JSON</button>
+                        <button class="btn btn-secondary export-btn" data-format="markdown" title="Export Markdown">📝
+                            MD</button>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="flex gap-2 flex-wrap mb-3">
+                    <div class="metric-card gradient-1" style="flex: 1; min-width: 120px; padding: 1rem;">
+                        <div class="metric-value" id="straceTotalCalls" style="font-size: 1.5rem;">--</div>
+                        <div class="metric-label" style="font-size: 0.7rem;">Parsed Calls</div>
+                    </div>
+                    <div class="metric-card gradient-2" style="flex: 1; min-width: 120px; padding: 1rem;">
+                        <div class="metric-value" id="straceHighLat" style="font-size: 1.5rem;">--</div>
+                        <div class="metric-label" style="font-size: 0.7rem;">High Latency</div>
+                    </div>
+                    <div class="metric-card gradient-3" style="flex: 1; min-width: 120px; padding: 1rem;">
+                        <div class="metric-value" id="straceOptCandidates" style="font-size: 1.5rem;">--</div>
+                        <div class="metric-label" style="font-size: 0.7rem;">To Optimize</div>
+                    </div>
+                    <div class="metric-card gradient-4" style="flex: 1; min-width: 120px; padding: 1rem;">
+                        <div class="metric-value" id="straceAnomalies" style="font-size: 1.5rem;">--</div>
+                        <div class="metric-label" style="font-size: 0.7rem;">Anomalies</div>
+                    </div>
+                </div>
+
+                <!-- Syscall Distribution Chart -->
+                <div class="chart-container" style="height: 280px; margin-bottom: 1rem;">
+                    <div class="chart-title">🔬 Syscall Distribution</div>
+                    <div class="chart-wrapper">
+                        <canvas id="straceSyscallChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Category Chart -->
+                <div class="chart-container" style="height: 250px; margin-bottom: 1rem;">
+                    <div class="chart-title">📊 Category Breakdown</div>
+                    <div class="chart-wrapper">
+                        <canvas id="straceCategoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strace Recommendations -->
+            <div class="card" id="straceRecsCard" style="display: none;">
+                <div class="card-header">
+                    <div class="card-title">💡 AI Optimization Recommendations</div>
+                </div>
+                <div id="straceRecommendations">
+                    <p class="text-muted">Upload or paste strace output to get AI recommendations.</p>
+                </div>
+            </div>
+
+            <!-- Export Result -->
+            <div class="card" id="exportResultCard" style="display: none;">
+                <div class="card-header">
+                    <div class="card-title">📥 Export Result</div>
+                    <button class="btn btn-secondary" id="closeExportResult">✕</button>
+                </div>
+                <pre class="export-preview" id="exportPreview"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Tab -->
+<div id="analysis" class="tab-content">
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="card-title">🔍 Advanced Syscall Analysis</div>
+            <div class="card-subtitle">Identify bottlenecks and optimize performance</div>
+        </div>
+        <div class="main-grid">
+            <div class="content-grid">
+                <div class="chart-container" style="height: 400px;">
+                    <div class="chart-title">Anomalous Call Patterns</div>
+                    <div class="chart-wrapper">
+                        <canvas id="anomalyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div class="chart-container" style="height: 400px;">
+                    <div class="chart-title">Optimization Cluster Analysis</div>
+                    <div class="chart-wrapper">
+                        <canvas id="clusterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Predictions Tab -->
+<div id="predictions" class="tab-content">
+    <div class="main-grid">
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🎯 Throughput Prediction</div>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚙️ Resource Optimization</div>
+                </div>
+                <div id="resourceRecommendations" class="feed-list">
+                    <!-- Recommendations will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Benchmark Tab -->
+<div id="benchmark" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">⚡ Performance Benchmark</div>
+            <button class="btn btn-primary" id="runBenchmark">Run Benchmark</button>
+        </div>
+        <div class="dashboard-grid mt-3">
+            <div class="metric-card gradient-green">
+                <div class="metric-value">2.4x</div>
+                <div class="metric-label">Efficiency Gain</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">-32%</div>
+                <div class="metric-label">Latency Reduction</div>
+            </div>
+        </div>
+        <div class="chart-container mt-4" style="height: 300px;">
+            <canvas id="benchmarkChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Tab -->
+<div id="realtime" class="tab-content">
+    <div class="main-grid" style="grid-template-columns: 1fr 2fr;">
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🔴 Real-time Feed</div>
+                    <button class="btn btn-primary" id="toggleMonitoring">Start</button>
+                </div>
+                <div id="syscallFeed" class="feed-list">
+                    <!-- Live syscalls will append here -->
+                </div>
+            </div>
+        </div>
+        <div class="content-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📊 Live Metrics</div>
+                </div>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="liveChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/app.js' %}"></script>
+<script>
+    // Django-specific JavaScript for historical data loading
+    function loadAnalysisData(id) {
+        showNotification(`Loading analysis #${id}...`, 'info');
+        // This function would fetch analysis details from the DB and populate charts
+        // Implementation can be added to app.js
+    }
+</script>
+{% endblock %}

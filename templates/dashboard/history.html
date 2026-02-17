@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analysis History | SysCall AI{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header flex-between">
+        <div>
+            <div class="card-title">📖 Analysis History</div>
+            <div class="card-subtitle">All your previous system call optimizations</div>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="main-grid" style="grid-template-columns: 1fr;">
+    <div class="card">
+        {% if analyses %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 2px solid var(--border-subtle);">
+                        <th style="padding: 12px; color: var(--text-secondary);">Date</th>
+                        <th style="padding: 12px; color: var(--text-secondary);">Analysis Title</th>
+                        <th style="padding: 12px; color: var(--text-secondary);">Type</th>
+                        <th style="padding: 12px; color: var(--text-secondary);">Syscalls</th>
+                        <th style="padding: 12px; color: var(--text-secondary);">High Latency</th>
+                        <th style="padding: 12px; color: var(--text-secondary);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in analyses %}
+                    <tr style="border-bottom: 1px solid var(--border-subtle); transition: background 0.3s;"
+                        onmouseover="this.style.background='rgba(255,255,255,0.03)'"
+                        onmouseout="this.style.background='transparent'">
+                        <td style="padding: 12px; color: var(--text-muted); font-size: 0.85rem;">{{
+                            item.created_at|date:"M d, Y H:i" }}</td>
+                        <td style="padding: 12px; font-weight: 500;">{{ item.title }}</td>
+                        <td style="padding: 12px;">
+                            <span class="badge"
+                                style="background: rgba(102, 126, 234, 0.2); color: var(--neon-cyan);">{{
+                                item.source_type|title }}</span>
+                        </td>
+                        <td style="padding: 12px; font-family: var(--font-mono); color: var(--neon-green);">{{
+                            item.total_syscalls }}</td>
+                        <td style="padding: 12px; font-family: var(--font-mono); color: var(--neon-pink);">{{
+                            item.analysis.high_latency_count|default:"0" }}</td>
+                        <td style="padding: 12px;">
+                            <button class="btn btn-secondary" style="font-size: 0.7rem; padding: 4px 10px;"
+                                onclick="viewAnalysis({{ item.id }})">View</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div style="font-size: 3rem; margin-bottom: 20px;">📜</div>
+            <h2 class="text-primary">No History Yet</h2>
+            <p class="text-muted">Once you analyze some system calls, they'll show up here.</p>
+            <a href="{% url 'dashboard' %}" class="btn btn-primary mt-4">Start First Analysis</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function viewAnalysis(id) {
+        // Redirect to dashboard with a query param to load this specific analysis
+        window.location.href = "{% url 'dashboard' %}?load=" + id;
+    }
+</script>
+{% endblock %}

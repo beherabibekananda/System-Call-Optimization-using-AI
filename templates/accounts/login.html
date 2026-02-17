@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login | SysCall AI{% endblock %}
+
+{% block content %}
+<div class="flex-center" style="min-height: 60vh;">
+    <div class="card" style="width: 100%; max-width: 450px; padding: var(--space-xl);">
+        <div class="card-header" style="text-align: center; margin-bottom: var(--space-xl);">
+            <div>
+                <div class="card-title" style="font-size: 2rem;">Welcome Back</div>
+                <div class="card-subtitle">Login to analyze your system calls</div>
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="id_username" class="metric-label"
+                    style="display: block; margin-bottom: 8px;">Username</label>
+                {{ form.username }}
+            </div>
+
+            <div class="mb-4">
+                <label for="id_password" class="metric-label"
+                    style="display: block; margin-bottom: 8px;">Password</label>
+                {{ form.password }}
+            </div>
+
+            <div class="mb-4 flex-between" style="align-items: center;">
+                <label class="text-secondary"
+                    style="font-size: 0.9rem; display: flex; align-items: center; cursor: pointer;">
+                    {{ form.remember_me }}
+                    <span style="margin-left: 8px;">Remember me</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; padding: 12px; font-size: 1.1rem; margin-bottom: 20px;">
+                Authenticate
+            </button>
+        </form>
+
+        <div class="text-center">
+            <p class="text-muted">Don't have an account?
+                <a href="{% url 'register' %}"
+                    style="color: var(--neon-cyan); text-decoration: none; font-weight: 500;">Register Now</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-family: inherit;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .form-input:focus {
+        border-color: var(--neon-cyan);
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: 0 0 15px rgba(0, 245, 255, 0.1);
+    }
+</style>
+{% endblock %}

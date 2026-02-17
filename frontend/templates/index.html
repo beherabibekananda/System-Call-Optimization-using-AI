@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="AI-powered System Call Optimization Platform - Analyze, predict, and optimize kernel syscall performance using machine learning.">
+    <meta name="keywords" content="syscall, optimization, AI, machine learning, kernel, performance, Linux">
+    <title>SysCall AI | System Call Optimization Platform</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+
+    <style>
+        /* Additional inline styles for critical path */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Chart container animations */
+        .chart-container canvas {
+            animation: chartFadeIn 0.5s ease;
+        }
+
+        @keyframes chartFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <div class="logo-text">
+                    <h1>SysCall AI</h1>
+                    <p>System Call Optimization Platform</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="status-badge" id="systemStatus">
+                    <span class="status-dot"></span>
+                    <span>System Active</span>
+                </div>
+                <button class="btn btn-secondary btn-icon" id="refreshBtn" title="Refresh Data">
+                    🔄
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="dashboard">📊 Dashboard</button>
+            <button class="nav-tab" data-tab="strace">🔬 Strace</button>
+            <button class="nav-tab" data-tab="analysis">🔍 Analysis</button>
+            <button class="nav-tab" data-tab="predictions">🎯 Predictions</button>
+            <button class="nav-tab" data-tab="benchmark">⚡ Benchmark</button>
+            <button class="nav-tab" data-tab="realtime">📡 Real-time</button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <!-- Metric Cards -->
+            <div class="dashboard-grid">
+                <div class="metric-card gradient-1">
+                    <div class="metric-icon">⏱️</div>
+                    <div class="metric-value" id="avgLatency">--</div>
+                    <div class="metric-label">Avg Latency (μs)</div>
+                    <div class="metric-change positive" id="latencyChange">
+                        <span>↓</span> <span>--% from baseline</span>
+                    </div>
+                </div>
+                <div class="metric-card gradient-2">
+                    <div class="metric-icon">💻</div>
+                    <div class="metric-value" id="cpuUsage">--</div>
+                    <div class="metric-label">CPU Utilization</div>
+                    <div class="metric-change positive" id="cpuChange">
+                        <span>↓</span> <span>-- optimized</span>
+                    </div>
+                </div>
+                <div class="metric-card gradient-3">
+                    <div class="metric-icon">🚀</div>
+                    <div class="metric-value" id="throughput">--</div>
+                    <div class="metric-label">Throughput (ops/s)</div>
+                    <div class="metric-change positive" id="throughputChange">
+                        <span>↑</span> <span>--% increase</span>
+                    </div>
+                </div>
+                <div class="metric-card gradient-4">
+                    <div class="metric-icon">🎯</div>
+                    <div class="metric-value" id="optimizedCalls">--</div>
+                    <div class="metric-label">Optimized Calls</div>
+                    <div class="metric-change positive">
+                        <span>✓</span> <span>AI recommendations applied</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Grid -->
+            <div class="main-grid">
+                <div class="content-grid">
+                    <!-- Latency Distribution Chart -->
+                    <div class="chart-container">
+                        <div class="chart-title">📈 Syscall Latency Distribution</div>
+                        <div class="chart-wrapper">
+                            <canvas id="latencyChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Category Performance Chart -->
+                    <div class="chart-container">
+                        <div class="chart-title">📊 Performance by Category</div>
+                        <div class="chart-wrapper">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar: Recommendations -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">💡 AI Recommendations</div>
+                            <div class="card-subtitle">Real-time optimization suggestions</div>
+                        </div>
+                        <button class="btn btn-primary" id="runAnalysisBtn">Analyze</button>
+                    </div>
+                    <div id="recommendationsList">
+                        <div class="recommendation-item high">
+                            <div class="recommendation-header">
+                                <span class="recommendation-type">⚠️ High Latency Detected</span>
+                                <span class="severity-badge high">High</span>
+                            </div>
+                            <p class="recommendation-text">Click "Analyze" to generate AI-powered optimization
+                                recommendations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strace Tab -->
+        <div id="strace" class="tab-content">
+            <div class="main-grid" style="grid-template-columns: 1fr 1fr;">
+                <!-- Left: Input Methods -->
+                <div class="content-grid">
+                    <!-- File Upload -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">📁 Upload Strace File</div>
+                                <div class="card-subtitle">Upload strace output from:
+                                    <code>strace -T -tt -o output.txt command</code></div>
+                            </div>
+                        </div>
+                        <div class="upload-zone" id="straceDropZone">
+                            <div class="upload-icon">📤</div>
+                            <p>Drag & drop strace file here</p>
+                            <p class="text-muted">or click to browse</p>
+                            <input type="file" id="straceFileInput" accept=".txt,.strace,.log,.out"
+                                style="display: none;">
+                        </div>
+                        <div id="uploadStatus" class="mt-2" style="display: none;">
+                            <div class="feed-item">
+                                <span class="feed-syscall" id="uploadFileName"></span>
+                                <span class="feed-timestamp" id="uploadFileSize"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paste Text -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">📋 Paste Strace Output</div>
+                                <div class="card-subtitle">Paste raw strace output directly</div>
+                            </div>
+                            <button class="btn btn-primary" id="parseStraceText">Parse Text</button>
+                        </div>
+                        <textarea id="straceTextInput" class="strace-textarea"
+                            placeholder="Paste strace output here...&#10;&#10;Example:&#10;14:12:05.123 read(3, &quot;data&quot;, 1024) = 512 <0.000123>&#10;14:12:05.124 write(1, &quot;hello&quot;, 5) = 5 <0.000008>&#10;14:12:05.125 openat(AT_FDCWD, &quot;/etc/passwd&quot;, O_RDONLY) = 4 <0.000045>"
+                            rows="8"></textarea>
+                    </div>
+
+                    <!-- Load Sample -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">📦 Sample Traces</div>
+                                <div class="card-subtitle">Load pre-recorded strace samples for testing</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 flex-wrap" id="sampleButtons">
+                            <button class="btn btn-secondary sample-btn" data-sample="sample_ls.strace">
+                                📂 ls -la (File Ops)
+                            </button>
+                            <button class="btn btn-secondary sample-btn" data-sample="sample_webserver.strace">
+                                🌐 Web Server (Network)
+                            </button>
+                            <button class="btn btn-secondary sample-btn" data-sample="sample_summary.strace">
+                                📊 Summary (-c mode)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Trace -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">🖥️ Live Trace</div>
+                                <div class="card-subtitle" id="traceToolInfo">Detecting tracing tool...</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="traceCommand" class="btn btn-secondary"
+                                style="flex: 1; text-align: left;" placeholder="Command to trace (e.g., ls -la /tmp)">
+                            <button class="btn btn-primary" id="runTraceBtn">▶ Trace</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Results -->
+                <div class="content-grid">
+                    <!-- Parse Stats -->
+                    <div class="card" id="straceResultsCard" style="display: none;">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">📊 Strace Analysis Results</div>
+                                <div class="card-subtitle" id="straceSource">--</div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-secondary export-btn" data-format="script"
+                                    title="Export Shell Script">📜 Script</button>
+                                <button class="btn btn-secondary export-btn" data-format="json" title="Export JSON">📋
+                                    JSON</button>
+                                <button class="btn btn-secondary export-btn" data-format="markdown"
+                                    title="Export Markdown">📝 MD</button>
+                            </div>
+                        </div>
+
+                        <!-- Metrics -->
+                        <div class="flex gap-2 flex-wrap mb-3">
+                            <div class="metric-card gradient-1" style="flex: 1; min-width: 120px; padding: 1rem;">
+                                <div class="metric-value" id="straceTotalCalls" style="font-size: 1.5rem;">--</div>
+                                <div class="metric-label" style="font-size: 0.7rem;">Parsed Calls</div>
+                            </div>
+                            <div class="metric-card gradient-2" style="flex: 1; min-width: 120px; padding: 1rem;">
+                                <div class="metric-value" id="straceHighLat" style="font-size: 1.5rem;">--</div>
+                                <div class="metric-label" style="font-size: 0.7rem;">High Latency</div>
+                            </div>
+                            <div class="metric-card gradient-3" style="flex: 1; min-width: 120px; padding: 1rem;">
+                                <div class="metric-value" id="straceOptCandidates" style="font-size: 1.5rem;">--</div>
+                                <div class="metric-label" style="font-size: 0.7rem;">To Optimize</div>
+                            </div>
+                            <div class="metric-card gradient-4" style="flex: 1; min-width: 120px; padding: 1rem;">
+                                <div class="metric-value" id="straceAnomalies" style="font-size: 1.5rem;">--</div>
+                                <div class="metric-label" style="font-size: 0.7rem;">Anomalies</div>
+                            </div>
+                        </div>
+
+                        <!-- Syscall Distribution Chart -->
+                        <div class="chart-container" style="height: 280px; margin-bottom: 1rem;">
+                            <div class="chart-title">🔬 Syscall Distribution</div>
+                            <div class="chart-wrapper">
+                                <canvas id="straceSyscallChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Category Chart -->
+                        <div class="chart-container" style="height: 250px; margin-bottom: 1rem;">
+                            <div class="chart-title">📊 Category Breakdown</div>
+                            <div class="chart-wrapper">
+                                <canvas id="straceCategoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Strace Recommendations -->
+                    <div class="card" id="straceRecsCard" style="display: none;">
+                        <div class="card-header">
+                            <div class="card-title">💡 AI Optimization Recommendations</div>
+                        </div>
+                        <div id="straceRecommendations">
+                            <p class="text-muted">Upload or paste strace output to get AI recommendations.</p>
+                        </div>
+                    </div>
+
+                    <!-- Export Result -->
+                    <div class="card" id="exportResultCard" style="display: none;">
+                        <div class="card-header">
+                            <div class="card-title">📥 Export Result</div>
+                            <button class="btn btn-secondary" id="closeExportResult">✕</button>
+                        </div>
+                        <pre class="export-preview" id="exportPreview"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Tab -->
+        <div id="analysis" class="tab-content">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">🔍 Syscall Analysis</div>
+                        <div class="card-subtitle">Analyze syscall patterns and identify optimization opportunities
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="processType" class="btn btn-secondary">
+                            <option value="mixed">Mixed Workload</option>
+                            <option value="io_heavy">I/O Heavy</option>
+                            <option value="cpu_heavy">CPU Heavy</option>
+                            <option value="network">Network Intensive</option>
+                        </select>
+                        <button class="btn btn-primary" id="generateAnalysis">Generate Analysis</button>
+                    </div>
+                </div>
+
+                <div id="analysisResults" class="mt-3">
+                    <div class="flex gap-3 flex-wrap mb-4">
+                        <div class="metric-card gradient-1" style="flex: 1; min-width: 200px;">
+                            <div class="metric-value" id="totalSyscalls">--</div>
+                            <div class="metric-label">Total Syscalls</div>
+                        </div>
+                        <div class="metric-card gradient-2" style="flex: 1; min-width: 200px;">
+                            <div class="metric-value" id="highLatencyCount">--</div>
+                            <div class="metric-label">High Latency Calls</div>
+                        </div>
+                        <div class="metric-card gradient-3" style="flex: 1; min-width: 200px;">
+                            <div class="metric-value" id="redundantCount">--</div>
+                            <div class="metric-label">Redundant Calls</div>
+                        </div>
+                        <div class="metric-card gradient-4" style="flex: 1; min-width: 200px;">
+                            <div class="metric-value" id="anomalyCount">--</div>
+                            <div class="metric-label">Anomalies</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container" style="height: 350px;">
+                        <div class="chart-title">📊 Category Analysis</div>
+                        <div class="chart-wrapper">
+                            <canvas id="analysisChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Recommendations -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📋 Detailed Recommendations</div>
+                </div>
+                <div id="detailedRecommendations">
+                    <p class="text-muted">Run analysis to see detailed optimization recommendations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictions Tab -->
+        <div id="predictions" class="tab-content">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">🎯 Performance Predictions</div>
+                        <div class="card-subtitle">ML-driven scheduling and resource allocation recommendations</div>
+                    </div>
+                    <button class="btn btn-primary" id="generatePredictions">Generate Predictions</button>
+                </div>
+
+                <div id="predictionResults" class="mt-3">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>Current CPU</th>
+                                <th>Recommended CPU</th>
+                                <th>Current Memory</th>
+                                <th>Recommended Memory</th>
+                                <th>Priority Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="predictionTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    Click "Generate Predictions" to see resource allocation recommendations
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="chart-container" style="height: 300px;">
+                    <div class="chart-title">📈 Resource Allocation Comparison</div>
+                    <div class="chart-wrapper">
+                        <canvas id="resourceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benchmark Tab -->
+        <div id="benchmark" class="tab-content">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">⚡ Performance Benchmark</div>
+                        <div class="card-subtitle">Measure optimization improvements across multiple iterations</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="number" id="benchmarkIterations" value="5" min="1" max="20"
+                            class="btn btn-secondary" style="width: 100px;" placeholder="Iterations">
+                        <button class="btn btn-primary" id="runBenchmark">Run Benchmark</button>
+                    </div>
+                </div>
+
+                <div id="benchmarkProgress" class="hidden mt-3">
+                    <div class="flex-between mb-2">
+                        <span>Running benchmark...</span>
+                        <span id="benchmarkPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="benchmarkProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="benchmarkResults" class="mt-3">
+                    <div class="dashboard-grid">
+                        <div class="metric-card gradient-1">
+                            <div class="metric-icon">⏱️</div>
+                            <div class="metric-value" id="benchLatencyReduction">--</div>
+                            <div class="metric-label">Latency Reduction</div>
+                        </div>
+                        <div class="metric-card gradient-2">
+                            <div class="metric-icon">💻</div>
+                            <div class="metric-value" id="benchCpuSavings">--</div>
+                            <div class="metric-label">CPU Savings</div>
+                        </div>
+                        <div class="metric-card gradient-3">
+                            <div class="metric-icon">💾</div>
+                            <div class="metric-value" id="benchMemorySavings">--</div>
+                            <div class="metric-label">Memory Savings</div>
+                        </div>
+                        <div class="metric-card gradient-4">
+                            <div class="metric-icon">🚀</div>
+                            <div class="metric-value" id="benchThroughputIncrease">--</div>
+                            <div class="metric-label">Throughput Increase</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container" style="height: 350px;">
+                        <div class="chart-title">📊 Benchmark Results Over Iterations</div>
+                        <div class="chart-wrapper">
+                            <canvas id="benchmarkChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Tab -->
+        <div id="realtime" class="tab-content">
+            <div class="main-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">📡 Real-time Syscall Monitor</div>
+                            <div class="card-subtitle">Live stream of system call events</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-success" id="startMonitor">▶ Start</button>
+                            <button class="btn btn-danger" id="stopMonitor">⏹ Stop</button>
+                        </div>
+                    </div>
+                    <div class="realtime-feed" id="realtimeFeed">
+                        <div class="feed-item">
+                            <span class="feed-timestamp">--:--:--</span>
+                            <div class="feed-details">
+                                <span class="feed-syscall">Click "Start" to begin monitoring</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <div class="card">
+                        <div class="card-title">📊 Live Latency</div>
+                        <div class="chart-container" style="height: 200px; padding: 0;">
+                            <div class="realtime-bars" id="latencyBars">
+                                <!-- Bars generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📈 Live Statistics</div>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <div class="metric-card gradient-1" style="flex: 1; min-width: 120px; padding: 1rem;">
+                                <div class="metric-value" id="liveCount" style="font-size: 1.5rem;">0</div>
+                                <div class="metric-label" style="font-size: 0.75rem;">Total Events</div>
+                            </div>
+                            <div class="metric-card gradient-2" style="flex: 1; min-width: 120px; padding: 1rem;">
+                                <div class="metric-value" id="liveHighLat" style="font-size: 1.5rem;">0</div>
+                                <div class="metric-label" style="font-size: 0.75rem;">High Latency</div>
+                            </div>
+                            <div class="metric-card gradient-3" style="flex: 1; min-width: 120px; padding: 1rem;">
+                                <div class="metric-value" id="liveRedundant" style="font-size: 1.5rem;">0</div>
+                                <div class="metric-label" style="font-size: 0.75rem;">Redundant</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>

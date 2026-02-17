@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SysCall AI | System Call Optimization{% endblock %}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-container">
+                <div class="logo-icon">▲</div>
+                <div>
+                    <h1 class="logo-text">SysCall AI</h1>
+                    <p class="logo-tagline">Kernel Optimization Platform</p>
+                </div>
+            </div>
+
+            <div class="status-container">
+                {% if user.is_authenticated %}
+                <div class="status-indicator active"></div>
+                <span class="status-text">{{ user.username }} (Logged In)</span>
+                <a href="{% url 'logout' %}"
+                    style="margin-left: 15px; color: var(--neon-pink); text-decoration: none; font-size: 0.8rem; border: 1px solid var(--neon-pink); padding: 5px 10px; border-radius: 5px; opacity: 0.8; transition: opacity 0.3s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Logout</a>
+                {% else %}
+                <div class="status-indicator"></div>
+                <span class="status-text">Guest Mode</span>
+                <a href="{% url 'login' %}"
+                    style="margin-left: 15px; color: var(--neon-cyan); text-decoration: none; font-size: 0.8rem; border: 1px solid var(--neon-cyan); padding: 5px 10px; border-radius: 5px; opacity: 0.8; transition: opacity 0.3s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Login</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages-container" style="margin-bottom: 20px;">
+            {% for message in messages %}
+            <div class="card"
+                style="padding: 10px 20px; border-left: 4px solid {% if message.tags == 'success' %}var(--neon-green){% else %}var(--neon-pink){% endif %}; background: rgba(255,255,255,0.05);">
+                <span class="text-primary">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+
+        <!-- Footer -->
+        <footer class="app-footer"
+            style="margin-top: 50px; text-align: center; opacity: 0.6; padding: 20px 0; border-top: 1px solid var(--border-subtle);">
+            <p>&copy; 2026 SysCall AI Platform. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+    <!-- CSRF Token for AJAX -->
+    <script>
+        const CSRF_TOKEN = "{{ csrf_token }}";
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register | SysCall AI{% endblock %}
+
+{% block content %}
+<div class="flex-center" style="min-height: 70vh;">
+    <div class="card" style="width: 100%; max-width: 500px; padding: var(--space-xl);">
+        <div class="card-header" style="text-align: center; margin-bottom: var(--space-xl);">
+            <div>
+                <div class="card-title" style="font-size: 2rem;">Create Account</div>
+                <div class="card-subtitle">Join the SysCall AI community</div>
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'register' %}">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="id_username" class="metric-label"
+                    style="display: block; margin-bottom: 8px;">Username</label>
+                {{ form.username }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_email" class="metric-label" style="display: block; margin-bottom: 8px;">Email
+                    Address</label>
+                {{ form.email }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_password1" class="metric-label"
+                    style="display: block; margin-bottom: 8px;">Password</label>
+                {{ form.password1 }}
+            </div>
+
+            <div class="mb-4">
+                <label for="id_password2" class="metric-label" style="display: block; margin-bottom: 8px;">Confirm
+                    Password</label>
+                {{ form.password2 }}
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; padding: 12px; font-size: 1.1rem; margin-bottom: 20px;">
+                Create Profile
+            </button>
+        </form>
+
+        <div class="text-center">
+            <p class="text-muted">Already have an account?
+                <a href="{% url 'login' %}"
+                    style="color: var(--neon-cyan); text-decoration: none; font-weight: 500;">Login Here</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-family: inherit;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .form-input:focus {
+        border-color: var(--neon-cyan);
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: 0 0 15px rgba(0, 245, 255, 0.1);
+    }
+
+    .helptext {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        display: block;
+        margin-top: 5px;
+    }
+
+    .errorlist {
+        color: var(--neon-pink);
+        font-size: 0.8rem;
+        list-style: none;
+        padding: 0;
+        margin: 5px 0;
+    }
+</style>
+{% endblock %}
