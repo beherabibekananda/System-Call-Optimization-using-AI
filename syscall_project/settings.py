@@ -4,14 +4,25 @@ Django settings for SysCall AI Project
 
 from pathlib import Path
 import os
+import dj_database_url
+import environ
+
+# Initialize environment variables
+env = environ.Env(
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, ['*']),
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-tc^bn+ha0)$3n++1rk)hd3&#2p4%ipafwhmmmdu3y$pmpgw-p7"
+# Read .env file if it exists
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-DEBUG = True
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-tc^bn+ha0)$3n++1rk)hd3&#2p4%ipafwhmmmdu3y$pmpgw-p7')
 
-ALLOWED_HOSTS = ['*']
+DEBUG = env('DEBUG')
+
+ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -62,11 +73,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "syscall_project.wsgi.application"
 
+# Database configuration
+# Will use DATABASE_URL from environment for Supabase, 
+# otherwise fall back to local SQLite.
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:////{os.path.join(BASE_DIR, "db.sqlite3")}',
+        conn_max_age=600
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [

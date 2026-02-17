@@ -2,6 +2,9 @@
 django>=5.0.0
 whitenoise>=6.6.0
 gunicorn>=21.0.0
+psycopg2-binary>=2.9.0
+dj-database-url>=2.1.0
+django-environ>=0.11.0
 
 # Core ML/Data Science
 numpy>=1.21.0
