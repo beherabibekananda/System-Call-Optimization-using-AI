@@ -123,29 +123,31 @@ Navigate to **http://localhost:5001**
 - **Username:** `admin`
 - **Password:** `admin`
 
-## 🌍 Deployment (Vercel + Supabase)
+## 🌍 Deployment (Render - Recommended)
 
-### 1. Database Setup (Supabase)
-1.  Create a project on [Supabase.com](https://supabase.com).
-2.  Go to **Project Settings** > **Database** > **Connection String**.
-3.  Copy the **URI (Transaction Pooler)**. It looks like: `postgres://postgres.[ID]:[PASS]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require`.
-4.  Replace `[YOUR-PASSWORD]` with your actual database password.
+Render is recommended because it supports **WebSockets** (for real-time syscall feeds) and allows for a more flexible process environment than Vercel.
 
-### 2. Deployment Setup (Vercel)
-1.  Push your code to a **GitHub** repository.
-2.  Import the repository into **Vercel**.
-3.  In **Environment Variables**, add the following:
-    *   `DATABASE_URL`: Your Supabase connection string.
-    *   `SECRET_KEY`: A random long string (for security).
+### 1. Simple Blueprint Deployment
+1.  Push your code to **GitHub**.
+2.  Go to [dashboard.render.com](https://dashboard.render.com).
+3.  Click **"New"** > **"Blueprint"**.
+4.  Connect your GitHub repository.
+5.  Render will automatically detect the `render.yaml` file and set up:
+    *   A **PostgreSQL** database (Free).
+    *   A **Web Service** running your Django app.
+    *   Automatic migrations and static file collection.
+
+### 2. Manual Setup (If not using Blueprint)
+*   **Build Command**: `./build.sh`
+*   **Start Command**: `gunicorn syscall_project.wsgi:application`
+*   **Environment Variables**:
+    *   `DATABASE_URL`: Your database connection string.
+    *   `SECRET_KEY`: A long secret string.
     *   `DEBUG`: `False`
-    *   `ALLOWED_HOSTS`: `*` (or your actual Vercel domain).
-4.  **Deploy!** Vercel will build and launch your SysCall AI platform.
+    *   `ALLOWED_HOSTS`: `*`
 
-### 3. Migrations (Production)
-Once deployed, you can run migrations on Supabase by connecting locally using your `.env` file and running:
-```bash
-python manage.py migrate
-```
+## 🌍 Alternative: Deployment (Vercel + Supabase)
+*(Note: WebSockets and Live Tracing may not function on Vercel)*
 
 ## 📸 UI Features
 

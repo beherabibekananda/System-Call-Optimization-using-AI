@@ -345,4 +345,63 @@ def api_benchmark(request):
         })
     except Exception as e:
         return json_res({'success': False, 'error': str(e)}, status=500)
+@csrf_exempt
+@login_required
+def api_strace_run(request):
+    """Run a live strace command and analyze output"""
+    if request.method != 'POST':
+        return json_res({'success': False, 'error': 'Only POST allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        command = data.get('command', '')
+        timeout = data.get('timeout', 30)
+        
+        if not command:
+            return json_res({'success': False, 'error': 'No command provided'}, status=400)
+        
+        # Run strace
+        run_results = strace_runner.run_strace(command, timeout=timeout)
+        
+        if not run_results['success']:
+            return json_res(run_results, status=400)
+        
+        # Parse output
+        output_file = run_results['output_file']
+        df = strace_parser.parse_file(output_file)
+        parse_stats = strace_parser.get_parse_stats()
+        
+        recommendations, analysis = analyzer.get_optimization_recommendations(df)
+        
+        # Save record
+        analysis_record = StraceAnalysis.objects.create(
+            user=request.user,
+            title=f"LiveTrace_{command[:30]}",
+            source_type='live',
+            total_syscalls=len(df),
+            analysis_json=json.dumps(analysis),
+            recommendations_json=json.dumps(recommendations),
+            syscall_summary_json=json.dumps(df['syscall_name'].value_counts().head(15).to_dict()),
+            category_summary_json=json.dumps(df['category'].value_counts().to_dict()),
+            parse_stats_json=json.dumps(parse_stats)
+        )
+        
+        return json_res({
+            'success': True,
+            'id': analysis_record.id,
+            'parse_stats': parse_stats,
+            'total_syscalls': len(df),
+            'analysis': analysis,
+            'recommendations': recommendations,
+            'syscall_summary': json.loads(analysis_record.syscall_summary_json),
+            'category_summary': json.loads(analysis_record.category_summary_json),
+            'source': 'strace_live',
+            'command': command
+        })
+    except Exception as e:
+        return json_res({'success': False, 'error': str(e)}, status=500)
 
+@login_required
+def get_trace_tool_info(request):
+    """Get info about available tracing tools (strace/dtruss)"""
+    return json_res(strace_runner.get_tool_info())

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: syscall-ai
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn syscall_project.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: syscall-db
+          property: connectionString
+
+databases:
+  - name: syscall-db
+    plan: free
