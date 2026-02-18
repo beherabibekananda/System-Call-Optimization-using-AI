@@ -74,35 +74,41 @@ TEMPLATES = [
 WSGI_APPLICATION = "syscall_project.wsgi.application"
 
 # Database configuration
-# Will use DATABASE_URL from environment for Supabase, 
-# otherwise fall back to local SQLite.
-db_url = os.environ.get('DATABASE_URL', f'sqlite:////{os.path.join(BASE_DIR, "db.sqlite3")}')
+db_url = os.environ.get('DATABASE_URL')
 
-# Fail-safe: Automatically fix common Supabase connection string mistakes
-if "supabase.com" in db_url:
-    db_url = db_url.replace("supabase.com", "supabase.co")
-if "@" in db_url.split("://")[-1].split("@")[0]:
-    # If there is an unencoded @ in the password section
-    import urllib.parse
-    parts = db_url.split("@", 1)
-    if len(parts) > 1:
-        auth_part = parts[0]
-        host_part = parts[1]
-        schema_auth = auth_part.split("://")
-        if len(schema_auth) > 1:
-            schema = schema_auth[0]
-            user_pass = schema_auth[1].split(":", 1)
-            if len(user_pass) > 1:
-                username = user_pass[0]
-                password = urllib.parse.quote(user_pass[1])
-                db_url = f"{schema}://{username}:{password}@{host_part}"
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default=db_url,
-        conn_max_age=600
-    )
-}
+if db_url:
+    # 1. Fix the hostname if it's .com
+    if "supabase.com" in db_url:
+        db_url = db_url.replace("supabase.com", "supabase.co")
+    
+    # 2. Fix unencoded @ in password
+    if "@" in db_url.split("://")[-1].split("@")[0]:
+        import urllib.parse
+        parts = db_url.split("@", 1)
+        if len(parts) > 1:
+            auth_part = parts[0]
+            host_part = parts[1]
+            schema_auth = auth_part.split("://")
+            if len(schema_auth) > 1:
+                schema = schema_auth[0]
+                user_pass = schema_auth[1].split(":", 1)
+                if len(user_pass) > 1:
+                    username = user_pass[0]
+                    password = urllib.parse.quote(user_pass[1])
+                    db_url = f"{schema}://{username}:{password}@{host_part}"
+    
+    # Force Django to use this cleaned URL
+    DATABASES = {
+        'default': dj_database_url.parse(db_url, conn_max_age=600)
+    }
+else:
+    # Fallback to local SQLite if no DATABASE_URL is found
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=f'sqlite:////{os.path.join(BASE_DIR, "db.sqlite3")}',
+            conn_max_age=600
+        )
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
