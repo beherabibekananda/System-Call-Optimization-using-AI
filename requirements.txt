@@ -5,6 +5,8 @@ gunicorn>=21.0.0
 psycopg2-binary>=2.9.0
 dj-database-url>=2.1.0
 django-environ>=0.11.0
+django-crispy-forms>=2.1
+crispy-bootstrap5>=2024.2
 
 # Core ML/Data Science
 numpy>=1.21.0
