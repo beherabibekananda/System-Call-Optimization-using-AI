@@ -35,13 +35,16 @@
             <div class="status-container">
                 {% if user.is_authenticated %}
                 <div class="status-indicator active"></div>
-                <span class="status-text">{{ user.username }} (Logged In)</span>
+                <span class="status-text">{{ user.username }}</span>
+                <a href="{% url 'profile' %}"
+                    style="margin-left: 10px; color: var(--neon-cyan); text-decoration: none; font-size: 0.75rem; border: 1px solid var(--neon-cyan); padding: 4px 9px; border-radius: 5px; opacity: 0.8; transition: opacity 0.3s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">⚙️ Agent</a>
                 <a href="{% url 'logout' %}"
-                    style="margin-left: 15px; color: var(--neon-pink); text-decoration: none; font-size: 0.8rem; border: 1px solid var(--neon-pink); padding: 5px 10px; border-radius: 5px; opacity: 0.8; transition: opacity 0.3s;"
+                    style="margin-left: 8px; color: var(--neon-pink); text-decoration: none; font-size: 0.75rem; border: 1px solid var(--neon-pink); padding: 4px 9px; border-radius: 5px; opacity: 0.8; transition: opacity 0.3s;"
                     onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Logout</a>
                 {% else %}
                 <div class="status-indicator"></div>
-                <span class="status-text">Guest Mode</span>
+                <span class="status-text">Guest</span>
                 <a href="{% url 'login' %}"
                     style="margin-left: 15px; color: var(--neon-cyan); text-decoration: none; font-size: 0.8rem; border: 1px solid var(--neon-cyan); padding: 5px 10px; border-radius: 5px; opacity: 0.8; transition: opacity 0.3s;"
                     onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">Login</a>

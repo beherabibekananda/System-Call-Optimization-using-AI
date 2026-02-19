@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile & Agent Setup | SysCall AI{% endblock %}
+
+{% block content %}
+<div class="main-grid" style="grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 900px; margin: 2rem auto;">
+
+    <!-- Left: Profile Info -->
+    <div class="content-grid">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">👤 Profile</div>
+            </div>
+            <div class="status-list">
+                <div class="status-item">
+                    <span>Username</span>
+                    <span class="badge badge-success">{{ user.username }}</span>
+                </div>
+                <div class="status-item">
+                    <span>Email</span>
+                    <span style="color: var(--text-secondary);">{{ user.email|default:"Not set" }}</span>
+                </div>
+                <div class="status-item">
+                    <span>Member Since</span>
+                    <span style="color: var(--text-secondary);">{{ user.date_joined|date:"M d, Y" }}</span>
+                </div>
+                <div class="status-item">
+                    <span>Last Login</span>
+                    <span style="color: var(--text-secondary);">{{ user.last_login|date:"M d, Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Agent Setup -->
+    <div class="content-grid">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">🤖 Agent Setup</div>
+                    <div class="card-subtitle">Stream live syscalls from your machine</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Download -->
+            <div class="feed-item" style="margin-bottom: 1rem;">
+                <div class="feed-syscall" style="font-size: 0.85rem; margin-bottom: 0.5rem;">
+                    Step 1 — Install dependencies
+                </div>
+                <code
+                    style="background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; border-radius: 6px; display: block; font-size: 0.8rem; color: var(--neon-cyan);">
+                    pip install websocket-client psutil
+                </code>
+            </div>
+
+            <!-- Step 2: Download Agent -->
+            <div class="feed-item" style="margin-bottom: 1rem;">
+                <div class="feed-syscall" style="font-size: 0.85rem; margin-bottom: 0.5rem;">
+                    Step 2 — Download your personal agent
+                </div>
+                <a href="{% url 'download_agent' %}" class="btn btn-primary"
+                    style="width: 100%; text-align: center; display: block;">
+                    ⬇️ Download syscall_agent.py
+                </a>
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem;">
+                    Your unique token is embedded in the file. Do not share it.
+                </p>
+            </div>
+
+            <!-- Step 3: Run -->
+            <div class="feed-item" style="margin-bottom: 1rem;">
+                <div class="feed-syscall" style="font-size: 0.85rem; margin-bottom: 0.5rem;">
+                    Step 3 — Run the agent
+                </div>
+                <code
+                    style="background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; border-radius: 6px; display: block; font-size: 0.8rem; color: var(--neon-green);">
+                    python syscall_agent.py
+                </code>
+            </div>
+
+            <!-- Step 4: Watch -->
+            <div class="feed-item" style="margin-bottom: 1.5rem;">
+                <div class="feed-syscall" style="font-size: 0.85rem;">
+                    Step 4 — Watch live data in Real-time tab 📡
+                </div>
+            </div>
+
+            <!-- Token Display -->
+            <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.3rem;">Your Agent Token</div>
+                <code
+                    style="font-size: 0.65rem; color: var(--neon-cyan); word-break: break-all;">{{ token.token }}</code>
+            </div>
+
+            <!-- Regenerate Token -->
+            <form method="post" action="{% url 'regenerate_token' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary" style="width: 100%;"
+                    onclick="return confirm('Regenerate token? Your old agent will stop working until updated.')">
+                    🔄 Regenerate Token
+                </button>
+            </form>
+        </div>
+
+        <!-- Platform Support -->
+        <div class="card" style="margin-top: 1rem;">
+            <div class="card-header">
+                <div class="card-title">🖥️ Platform Support</div>
+            </div>
+            <div class="status-list">
+                <div class="status-item">
+                    <span>🍎 macOS</span>
+                    <span class="badge badge-success">Supported</span>
+                </div>
+                <div class="status-item">
+                    <span>🪟 Windows</span>
+                    <span class="badge badge-success">Supported</span>
+                </div>
+                <div class="status-item">
+                    <span>🐧 Linux</span>
+                    <span class="badge badge-success">Supported</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -7,6 +7,7 @@
 <!-- Navigation Tabs -->
 <nav class="nav-tabs">
     <button class="nav-tab active" data-tab="dashboard">📊 Dashboard</button>
+    <button class="nav-tab" data-tab="processes" id="processesTab">🖥️ Processes</button>
     <button class="nav-tab" data-tab="strace">🔬 Strace</button>
     <button class="nav-tab" data-tab="analysis">🔍 Analysis</button>
     <button class="nav-tab" data-tab="predictions">🎯 Predictions</button>
@@ -116,7 +117,8 @@
                     <div>
                         <div class="card-title">📁 Upload Strace File</div>
                         <div class="card-subtitle">Upload strace output from:
-                            <code>strace -T -tt -o output.txt command</code></div>
+                            <code>strace -T -tt -o output.txt command</code>
+                        </div>
                     </div>
                 </div>
                 <div class="upload-zone" id="straceDropZone">
@@ -339,27 +341,173 @@
     </div>
 </div>
 
+<!-- Processes Tab -->
+<div id="processes" class="tab-content">
+
+    <!-- Status bar -->
+    <div id="procStatusBanner"
+        style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.75rem 1.25rem;margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div id="procDot"
+                style="width:10px;height:10px;border-radius:50%;background:var(--neon-yellow);flex-shrink:0;"></div>
+            <div>
+                <span id="procStatusText" style="font-weight:600;font-size:0.9rem;">Waiting for agent...</span>
+                <span id="procCount" style="margin-left:0.75rem;font-size:0.75rem;color:var(--text-muted);"></span>
+            </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+            <input id="procSearch" type="text" placeholder="🔍 Search process..."
+                oninput="filterProcessTree(this.value)"
+                style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.35rem 0.75rem;color:var(--text-primary);font-size:0.8rem;outline:none;width:200px;">
+            <select id="procSort" onchange="renderProcessTree()"
+                style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.35rem 0.6rem;color:var(--text-primary);font-size:0.8rem;">
+                <option value="cpu">Sort: CPU%</option>
+                <option value="memory">Sort: Memory%</option>
+                <option value="name">Sort: Name</option>
+                <option value="pid">Sort: PID</option>
+            </select>
+            <button onclick="requestProcessSnapshot()" class="btn btn-secondary"
+                style="font-size:0.78rem;padding:0.35rem 0.75rem;">↻ Refresh</button>
+        </div>
+    </div>
+
+    <!-- System Summary Cards -->
+    <div class="dashboard-grid" style="margin-bottom:1.25rem;">
+        <div class="metric-card gradient-1">
+            <div class="metric-value" id="procTotal">—</div>
+            <div class="metric-label">Total Processes</div>
+        </div>
+        <div class="metric-card gradient-2">
+            <div class="metric-value" id="procRunning">—</div>
+            <div class="metric-label">Running</div>
+        </div>
+        <div class="metric-card"
+            style="background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(239,68,68,0.05));border-color:rgba(239,68,68,0.2);">
+            <div class="metric-value" id="procCpuTop" style="color:#ef4444;">—</div>
+            <div class="metric-label">Top CPU Process</div>
+        </div>
+        <div class="metric-card"
+            style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(139,92,246,0.05));border-color:rgba(139,92,246,0.2);">
+            <div class="metric-value" id="procMemTop" style="color:#8b5cf6;">—</div>
+            <div class="metric-label">Top Memory Process</div>
+        </div>
+    </div>
+
+    <!-- Process Tree -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">🌳 Process Hierarchy</div>
+            <div style="display:flex;gap:0.5rem;font-size:0.7rem;">
+                <span style="color:#ef4444;">■ High CPU</span>
+                <span style="color:#8b5cf6;">■ High Memory</span>
+                <span style="color:#10b981;">■ Normal</span>
+                <span style="color:#6b7280;">■ Idle</span>
+            </div>
+        </div>
+        <!-- Column headers -->
+        <div
+            style="display:grid;grid-template-columns:1fr 80px 90px 90px 90px;gap:0.5rem;padding:0.5rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">
+            <div>Process / Application</div>
+            <div style="text-align:right;">PID</div>
+            <div style="text-align:right;">CPU %</div>
+            <div style="text-align:right;">MEM %</div>
+            <div style="text-align:right;">Status</div>
+        </div>
+        <div id="processTree" style="max-height:60vh;overflow-y:auto;font-family:'JetBrains Mono',monospace;">
+            <!-- Populated by JS -->
+            <div style="text-align:center;padding:3rem;opacity:0.5;">
+                <div style="font-size:2rem;margin-bottom:0.5rem;">🖥️</div>
+                <div>Connect the agent to see your running processes.</div>
+                <div style="font-size:0.8rem;margin-top:0.5rem;color:var(--text-muted);">Go to <strong>⚙️ Agent</strong>
+                    in the header → download &amp; run the agent script.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Real-time Tab -->
 <div id="realtime" class="tab-content">
+    <!-- Agent Status Banner -->
+    <div id="agentStatusBanner" class="card mb-4"
+        style="border-left: 4px solid var(--neon-yellow); padding: 1rem 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div id="agentDot"
+                    style="width:12px;height:12px;border-radius:50%;background:var(--neon-yellow);animation:pulse 2s infinite;">
+                </div>
+                <div>
+                    <div id="agentStatusText" style="font-weight:600;">⏳ Waiting for agent connection...</div>
+                    <div id="agentSubText" style="font-size:0.75rem;color:var(--text-muted);">Run syscall_agent.py on
+                        your machine to start streaming</div>
+                </div>
+            </div>
+            <a href="{% url 'profile' %}" class="btn btn-primary" style="font-size:0.8rem;">
+                ⬇️ Get Agent
+            </a>
+        </div>
+    </div>
+
     <div class="main-grid" style="grid-template-columns: 1fr 2fr;">
+        <!-- Live Feed -->
         <div class="content-grid">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">🔴 Real-time Feed</div>
-                    <button class="btn btn-primary" id="toggleMonitoring">Start</button>
+                    <div>
+                        <div class="card-title">📡 Live Syscall Feed</div>
+                        <div id="feedSubtitle" class="card-subtitle">Waiting for agent...</div>
+                    </div>
+                    <button class="btn btn-secondary" id="clearFeedBtn" onclick="clearFeed()"
+                        style="font-size:0.75rem;">Clear</button>
                 </div>
-                <div id="syscallFeed" class="feed-list">
-                    <!-- Live syscalls will append here -->
+                <div id="syscallFeed" class="feed-list" style="max-height: 500px; overflow-y: auto;">
+                    <div class="feed-item" style="opacity:0.5;">
+                        <div class="feed-syscall">Waiting for live data...</div>
+                        <div class="feed-timestamp">Agent not connected</div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Live Charts + Stats -->
         <div class="content-grid">
+            <!-- Live Metrics Cards -->
+            <div class="dashboard-grid" style="margin-bottom:1rem;">
+                <div class="metric-card gradient-1">
+                    <div class="metric-value" id="liveTotal">0</div>
+                    <div class="metric-label">Events Received</div>
+                </div>
+                <div class="metric-card gradient-2">
+                    <div class="metric-value" id="liveHighLat">0</div>
+                    <div class="metric-label">High Latency</div>
+                </div>
+                <div class="metric-card gradient-3">
+                    <div class="metric-value" id="liveRedundant">0</div>
+                    <div class="metric-label">Redundant</div>
+                </div>
+                <div class="metric-card gradient-4">
+                    <div class="metric-value" id="liveAvgLat">—</div>
+                    <div class="metric-label">Avg Latency (μs)</div>
+                </div>
+            </div>
+
+            <!-- Live Latency Chart -->
+            <div class="card" style="margin-bottom:1rem;">
+                <div class="card-header">
+                    <div class="card-title">📊 Live Latency Stream</div>
+                    <div id="platformBadge" class="badge badge-success" style="display:none;"></div>
+                </div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="liveChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Syscalls -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">📊 Live Metrics</div>
+                    <div class="card-title">🔥 Top Syscalls (Live)</div>
                 </div>
-                <div class="chart-container" style="height: 400px;">
-                    <canvas id="liveChart"></canvas>
+                <div id="liveSyscallBreakdown" style="max-height:180px; overflow-y:auto;">
+                    <p class="text-muted" style="text-align:center; padding:1rem;">Waiting for data...</p>
                 </div>
             </div>
         </div>
@@ -370,11 +518,383 @@
 {% block extra_js %}
 <script src="{% static 'js/app.js' %}"></script>
 <script>
-    // Django-specific JavaScript for historical data loading
+    // -----------------------------------------------
+    // Django-specific: load saved analysis
+    // -----------------------------------------------
     function loadAnalysisData(id) {
         showNotification(`Loading analysis #${id}...`, 'info');
-        // This function would fetch analysis details from the DB and populate charts
-        // Implementation can be added to app.js
     }
+    function clearFeed() {
+        document.getElementById('syscallFeed').innerHTML = '';
+    }
+
+    // -----------------------------------------------
+    // 🌳 Process Hierarchy (Processes Tab)
+    // -----------------------------------------------
+    let procData = [];          // flat list of process objects
+    let procExpanded = {};      // pid -> true/false for collapsed state
+    let procFilter = '';        // current search string
+
+    function handleProcessSnapshot(data) {
+        procData = data.processes || [];
+        renderProcessTree();
+        updateProcSummary();
+        // Auto-switch to Processes tab on first load (login flow)
+        if (data.auto_switch) {
+            switchToTab('processes');
+            setAgentStatus('online', `🟢 Agent connected — ${data.platform || ''}`, `${procData.length} processes loaded`);
+        }
+        // Update status
+        const dot = document.getElementById('procDot');
+        const st = document.getElementById('procStatusText');
+        const ct = document.getElementById('procCount');
+        if (dot) dot.style.background = 'var(--neon-green)';
+        if (st) st.textContent = `🟢 Live — ${data.platform || 'Unknown'}  •  ${data.hostname || ''}`;
+        if (ct) ct.textContent = `${procData.length} processes`;
+    }
+
+    function updateProcSummary() {
+        const total = procData.length;
+        const running = procData.filter(p => p.status === 'running').length;
+        const topCpu = [...procData].sort((a, b) => b.cpu - a.cpu)[0];
+        const topMem = [...procData].sort((a, b) => b.memory - a.memory)[0];
+        setText('procTotal', total);
+        setText('procRunning', running);
+        setText('procCpuTop', topCpu ? topCpu.name : '—');
+        setText('procMemTop', topMem ? topMem.name : '—');
+    }
+
+    function setText(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    }
+
+    function renderProcessTree() {
+        const container = document.getElementById('processTree');
+        if (!container) return;
+        if (!procData.length) return;
+
+        const sortBy = document.getElementById('procSort')?.value || 'cpu';
+        const filtered = procFilter
+            ? procData.filter(p => p.name.toLowerCase().includes(procFilter) || String(p.pid).includes(procFilter))
+            : procData;
+
+        // Build parent→children map
+        const pidMap = {};
+        filtered.forEach(p => { pidMap[p.pid] = { ...p, children: [] }; });
+        const roots = [];
+
+        filtered.forEach(p => {
+            if (p.ppid && pidMap[p.ppid]) {
+                pidMap[p.ppid].children.push(pidMap[p.pid]);
+            } else {
+                roots.push(pidMap[p.pid]);
+            }
+        });
+
+        // Sort function
+        const sorter = (a, b) => {
+            if (sortBy === 'cpu') return b.cpu - a.cpu;
+            if (sortBy === 'memory') return b.memory - a.memory;
+            if (sortBy === 'name') return a.name.localeCompare(b.name);
+            if (sortBy === 'pid') return a.pid - b.pid;
+            return 0;
+        };
+
+        roots.sort(sorter);
+        roots.forEach(r => sortTree(r, sorter));
+
+        // Render HTML
+        let html = '';
+        roots.forEach(root => { html += renderNode(root, 0); });
+        container.innerHTML = html || '<div style="text-align:center;padding:2rem;opacity:0.5;">No matching processes</div>';
+    }
+
+    function sortTree(node, sorter) {
+        node.children.sort(sorter);
+        node.children.forEach(c => sortTree(c, sorter));
+    }
+
+    function renderNode(node, depth) {
+        if (!node) return '';
+        const hasChildren = node.children && node.children.length > 0;
+        const isExpanded = procExpanded[node.pid] !== false; // default expanded
+        const indent = depth * 20;
+
+        // Color based on resource usage
+        let nameColor = '#6b7280';
+        if (node.cpu > 50) nameColor = '#ef4444';
+        else if (node.cpu > 10) nameColor = '#f59e0b';
+        else if (node.memory > 5) nameColor = '#8b5cf6';
+        else if (node.status === 'running') nameColor = '#10b981';
+
+        // CPU bar width (capped at 100%)
+        const cpuBar = Math.min(node.cpu || 0, 100);
+        const memBar = Math.min(node.memory || 0, 100);
+
+        const statusBadge = node.status === 'running'
+            ? `<span style="font-size:0.6rem;background:rgba(16,185,129,0.15);color:#10b981;padding:1px 5px;border-radius:3px;">running</span>`
+            : `<span style="font-size:0.6rem;background:rgba(107,114,128,0.15);color:#6b7280;padding:1px 5px;border-radius:3px;">${node.status || 'sleep'}</span>`;
+
+        const toggle = hasChildren
+            ? `<span onclick="toggleProc(${node.pid})" style="cursor:pointer;margin-right:4px;display:inline-block;width:12px;text-align:center;font-size:0.7rem;">${isExpanded ? '▼' : '▶'}</span>`
+            : `<span style="display:inline-block;width:16px;"></span>`;
+
+        const icon = depth === 0 ? '⬛' : hasChildren ? '📁' : '▪️';
+
+        let html = `
+        <div class="proc-row" style="display:grid;grid-template-columns:1fr 80px 90px 90px 90px;gap:0.5rem;padding:0.45rem 1rem;border-bottom:1px solid rgba(255,255,255,0.03);align-items:center;transition:background 0.15s;"
+             onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+            <div style="padding-left:${indent}px;display:flex;align-items:center;gap:4px;min-width:0;">
+                ${toggle}
+                <span style="font-size:0.7rem;">${icon}</span>
+                <span style="color:${nameColor};font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${node.name} (${node.username || ''})">
+                    ${node.name}
+                </span>
+                ${node.username ? `<span style="font-size:0.62rem;color:var(--text-muted);margin-left:4px;">${node.username}</span>` : ''}
+            </div>
+            <div style="text-align:right;font-size:0.73rem;color:var(--text-muted);">${node.pid}</div>
+            <div style="text-align:right;">
+                <div style="font-size:0.73rem;color:${nameColor};">${(node.cpu || 0).toFixed(1)}%</div>
+                <div style="width:60px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-left:auto;margin-top:2px;">
+                    <div style="width:${cpuBar}%;height:100%;background:${nameColor};border-radius:2px;"></div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.73rem;color:#8b5cf6;">${(node.memory || 0).toFixed(1)}%</div>
+                <div style="width:60px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-left:auto;margin-top:2px;">
+                    <div style="width:${memBar}%;height:100%;background:#8b5cf6;border-radius:2px;"></div>
+                </div>
+            </div>
+            <div style="text-align:right;">${statusBadge}</div>
+        </div>`;
+
+        if (hasChildren && isExpanded) {
+            node.children.forEach(child => { html += renderNode(child, depth + 1); });
+        }
+        return html;
+    }
+
+    function toggleProc(pid) {
+        procExpanded[pid] = procExpanded[pid] === false ? true : false;
+        renderProcessTree();
+    }
+
+    function filterProcessTree(val) {
+        procFilter = val.toLowerCase().trim();
+        renderProcessTree();
+    }
+
+    function switchToTab(tabName) {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        const tab = document.querySelector(`[data-tab="${tabName}"]`);
+        const content = document.getElementById(tabName);
+        if (tab) tab.classList.add('active');
+        if (content) content.classList.add('active');
+    }
+
+    function requestProcessSnapshot() {
+        if (liveWs && liveWs.readyState === WebSocket.OPEN) {
+            liveWs.send(JSON.stringify({ command: 'snapshot' }));
+        } else {
+            showNotification('Agent not connected. Run syscall_agent.py first.', 'warning');
+        }
+    }
+
+    // -----------------------------------------------
+    // Real-time WebSocket Monitor (Django Channels)
+    // -----------------------------------------------
+    let liveWs = null;
+    let liveChart = null;
+    let liveStats = { total: 0, highLat: 0, redundant: 0, latencies: [], syscallCounts: {} };
+    const MAX_FEED_ITEMS = 80;
+    const MAX_CHART_POINTS = 60;
+    const CATEGORY_COLORS = {
+        file_io: '#06b6d4', memory: '#8b5cf6', network: '#3b82f6',
+        process: '#f59e0b', scheduling: '#10b981', synchronization: '#ef4444', other: '#6b7280'
+    };
+
+    function initLiveChart() {
+        const ctx = document.getElementById('liveChart');
+        if (!ctx) return;
+        if (liveChart) { liveChart.destroy(); }
+        liveChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Latency (μs)',
+                    data: [],
+                    borderColor: '#06b6d4',
+                    backgroundColor: 'rgba(6,182,212,0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 2,
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { display: false },
+                    y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function connectLiveWS() {
+        if (liveWs && liveWs.readyState < 2) return;
+        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${wsScheme}://${window.location.host}/ws/monitor/`;
+        liveWs = new WebSocket(wsUrl);
+
+        liveWs.onopen = () => {
+            console.log('[WS] Connected to monitor');
+            setAgentStatus('waiting', '⏳ Connected — Waiting for agent on your machine...', 'Run syscall_agent.py to start streaming');
+        };
+
+        liveWs.onmessage = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                handleLiveMessage(data);
+            } catch (err) { console.warn('WS parse error', err); }
+        };
+
+        liveWs.onclose = () => {
+            setAgentStatus('offline', '🔴 WebSocket disconnected', 'Reconnecting...');
+            setTimeout(connectLiveWS, 3000);
+        };
+
+        liveWs.onerror = () => { liveWs.close(); };
+    }
+
+    function handleLiveMessage(data) {
+        const type = data.type;
+
+        if (type === 'agent_online') {
+            const platform = data.platform || 'Unknown';
+            setAgentStatus('online', `🟢 Agent connected — ${platform}`, `Live data streaming from ${data.user || 'your machine'}`);
+            const badge = document.getElementById('platformBadge');
+            if (badge) { badge.textContent = platform; badge.style.display = 'inline-block'; }
+            return;
+        }
+
+        if (type === 'agent_offline') {
+            setAgentStatus('waiting', '⏳ Agent disconnected', 'Run syscall_agent.py to reconnect');
+            return;
+        }
+
+        if (type === 'process_snapshot') {
+            handleProcessSnapshot(data);
+            return;
+        }
+
+        if (type === 'syscall_batch' && data.events) {
+            data.events.forEach(addSyscallEvent);
+            return;
+        }
+
+        if (type === 'syscall') {
+            addSyscallEvent(data);
+        }
+    }
+
+    function addSyscallEvent(event) {
+        liveStats.total++;
+        if (event.is_high_latency) liveStats.highLat++;
+        if (event.is_redundant) liveStats.redundant++;
+        liveStats.latencies.push(event.latency_us || 0);
+        if (liveStats.latencies.length > 200) liveStats.latencies.shift();
+
+        const name = event.syscall || '?';
+        liveStats.syscallCounts[name] = (liveStats.syscallCounts[name] || 0) + 1;
+
+        // Update metric counters
+        document.getElementById('liveTotal').textContent = liveStats.total.toLocaleString();
+        document.getElementById('liveHighLat').textContent = liveStats.highLat.toLocaleString();
+        document.getElementById('liveRedundant').textContent = liveStats.redundant.toLocaleString();
+        const avgLat = liveStats.latencies.reduce((a, b) => a + b, 0) / liveStats.latencies.length;
+        document.getElementById('liveAvgLat').textContent = avgLat.toFixed(0);
+
+        // Update chart
+        if (liveChart) {
+            const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            liveChart.data.labels.push(now);
+            liveChart.data.datasets[0].data.push(Math.round(event.latency_us || 0));
+            if (liveChart.data.labels.length > MAX_CHART_POINTS) {
+                liveChart.data.labels.shift();
+                liveChart.data.datasets[0].data.shift();
+            }
+            liveChart.update('none');
+        }
+
+        // Update feed
+        const feed = document.getElementById('syscallFeed');
+        if (feed) {
+            const isHigh = event.is_high_latency;
+            const isRed = event.is_redundant;
+            const color = isHigh ? 'var(--neon-pink)' : isRed ? 'var(--neon-yellow)' : CATEGORY_COLORS[event.category] || '#6b7280';
+            const item = document.createElement('div');
+            item.className = 'feed-item';
+            item.style.borderLeft = `3px solid ${color}`;
+            item.innerHTML = `
+                <div class="feed-syscall" style="color:${color};">
+                    ${name} <span style="font-size:0.7rem;opacity:0.7;">[${event.category || '?'}]</span>
+                    ${isHigh ? '<span style="font-size:0.65rem;background:rgba(239,68,68,0.2);color:#ef4444;padding:1px 5px;border-radius:3px;margin-left:4px;">HIGH</span>' : ''}
+                    ${isRed ? '<span style="font-size:0.65rem;background:rgba(245,158,11,0.2);color:#f59e0b;padding:1px 5px;border-radius:3px;margin-left:4px;">REDUNDANT</span>' : ''}
+                </div>
+                <div class="feed-timestamp">${(event.latency_us || 0).toFixed(1)}μs • ${event.process || '?'} • PID ${event.pid || '?'}</div>`;
+            feed.insertBefore(item, feed.firstChild);
+            while (feed.children.length > MAX_FEED_ITEMS) feed.removeChild(feed.lastChild);
+        }
+
+        // Update top syscalls breakdown (every 20 events)
+        if (liveStats.total % 20 === 0) updateSyscallBreakdown();
+    }
+
+    function updateSyscallBreakdown() {
+        const el = document.getElementById('liveSyscallBreakdown');
+        if (!el) return;
+        const sorted = Object.entries(liveStats.syscallCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        const max = sorted[0]?.[1] || 1;
+        el.innerHTML = sorted.map(([name, count]) => `
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                <div style="font-size:0.8rem;min-width:100px;color:var(--neon-cyan);">${name}</div>
+                <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:3px;height:6px;">
+                    <div style="width:${(count / max * 100).toFixed(0)}%;height:100%;background:var(--neon-cyan);border-radius:3px;"></div>
+                </div>
+                <div style="font-size:0.75rem;color:var(--text-muted);min-width:30px;text-align:right;">${count}</div>
+            </div>`).join('');
+    }
+
+    function setAgentStatus(state, title, subtitle) {
+        const dot = document.getElementById('agentDot');
+        const text = document.getElementById('agentStatusText');
+        const sub = document.getElementById('agentSubText');
+        const banner = document.getElementById('agentStatusBanner');
+        if (!dot || !text || !sub || !banner) return;
+
+        const colors = { online: 'var(--neon-green)', waiting: 'var(--neon-yellow)', offline: 'var(--neon-pink)' };
+        dot.style.background = colors[state] || colors.waiting;
+        banner.style.borderLeftColor = colors[state] || colors.waiting;
+        text.textContent = title;
+        sub.textContent = subtitle;
+        document.getElementById('feedSubtitle').textContent =
+            state === 'online' ? 'Live stream active' : 'Waiting for agent...';
+    }
+
+    // Auto-connect when Real-time tab is activated
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (tab.dataset.tab === 'realtime') {
+                if (!liveChart) initLiveChart();
+                connectLiveWS();
+            }
+        });
+    });
 </script>
 {% endblock %}

@@ -25,6 +25,7 @@ DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -35,6 +36,7 @@ INSTALLED_APPS = [
     # Third-party
     "crispy_forms",
     "crispy_bootstrap5",
+    "channels",
     # Our apps
     "accounts",
     "dashboard",
@@ -72,6 +74,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "syscall_project.wsgi.application"
+ASGI_APPLICATION = "syscall_project.asgi.application"
+
+# Channel Layers - use in-memory for dev / single server
+# For multi-server production, switch to Redis:
+# pip install channels-redis
+# CHANNEL_LAYERS = {"default": {"BACKEND": "channels_redis.core.RedisChannelLayer", "CONFIG": {"hosts": [("127.0.0.1", 6379)]}}}
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 # Database configuration
 db_url = os.environ.get('DATABASE_URL')

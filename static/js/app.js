@@ -35,12 +35,12 @@ async function apiFetch(url, options = {}) {
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
-    initTabs();
-    initCharts();
-    initEventListeners();
-    initSocket();
-    initStrace();
-    loadInitialData();
+    try { initTabs(); } catch (e) { console.error('initTabs failed:', e); }
+    try { initCharts(); } catch (e) { console.error('initCharts failed:', e); }
+    try { initEventListeners(); } catch (e) { console.error('initEventListeners failed:', e); }
+    // initSocket() intentionally removed — WebSocket handled by Django Channels (inline script)
+    try { initStrace(); } catch (e) { console.error('initStrace failed:', e); }
+    try { loadInitialData(); } catch (e) { console.error('loadInitialData failed:', e); }
 });
 
 // ============================================
@@ -368,33 +368,10 @@ function initEventListeners() {
     document.getElementById('stopMonitor')?.addEventListener('click', stopMonitoring);
 }
 
-// ============================================
-// Socket.IO Connection
-// ============================================
-
+// NOTE: Socket.IO replaced by Django Channels WebSocket (in index.html inline script)
 function initSocket() {
-    try {
-        socket = io(SOCKET_URL);
-
-        socket.on('connect', () => {
-            console.log('Connected to server');
-            updateSystemStatus('connected');
-        });
-
-        socket.on('disconnect', () => {
-            console.log('Disconnected from server');
-            updateSystemStatus('disconnected');
-        });
-
-        socket.on('syscall_event', handleSyscallEvent);
-
-        socket.on('monitoring_status', (data) => {
-            console.log('Monitoring status:', data.status);
-        });
-
-    } catch (error) {
-        console.error('Socket connection failed:', error);
-    }
+    // No-op: real-time handled by connectLiveWS() in the template's extra_js block
+    console.log('[WS] Django Channels WebSocket will be connected when Real-time/Processes tab is opened.');
 }
 
 function updateSystemStatus(status) {
