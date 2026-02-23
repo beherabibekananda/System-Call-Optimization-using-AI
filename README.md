@@ -123,22 +123,19 @@ Navigate to **http://localhost:5001**
 - **Username:** `admin`
 - **Password:** `admin`
 
-## 🌍 Deployment (Vercel)
+## 🌍 Deployment (Render Container)
 
-This application is configured for deployment on **Vercel** out-of-the-box. The `vercel.json` file dictates the routing and serverless function environment. 
+This application is fully containerized with **Docker** and is ready to be deployed on Render, which fully supports **WebSockets** (using Daphne) for real-time live tracing.
 
 ### Deployment Steps:
 1. Ensure your code is pushed to your **GitHub** repository.
-2. Go to [Vercel](https://vercel.com/) and click **Add New Project**.
-3. Import your GitHub repository.
-4. Set the following **Environment Variables** in Vercel:
-    *   `DATABASE_URL`: Your PostgreSQL database connection string (e.g. from Supabase).
-    *   `SECRET_KEY`: A strong Django secret key.
-    *   `DEBUG`: `False`
-    *   `ALLOWED_HOSTS`: `.vercel.app`
-5. Click **Deploy**.
-
-*(Note: Live Strace execution from the dashboard is limited to the local development environment or traditional VPS instances due to serverless constraints. Uploading/pasting trace files works perfectly on Vercel).*
+2. Go to [Render Dashboard](https://dashboard.render.com).
+3. Click **New** -> **Blueprint**.
+4. Connect your GitHub repository.
+5. Render will detect the `render.yaml` file and automatically deploy:
+   - A free **PostgreSQL** database.
+   - A **Docker Web Service** running your Django app with Daphne (for WebSocket support).
+6. That's it! Your full-stack application and real-time dashboard will be live.
 
 ## 📸 UI Features
 

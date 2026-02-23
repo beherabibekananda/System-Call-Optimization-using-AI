@@ -34,3 +34,5 @@ gevent>=21.0.0
 # Testing
 pytest>=6.0.0
 pytest-cov>=2.0.0
+daphne>=4.0.0
+channels>=4.0.0
