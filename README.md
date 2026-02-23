@@ -123,31 +123,22 @@ Navigate to **http://localhost:5001**
 - **Username:** `admin`
 - **Password:** `admin`
 
-## 🌍 Deployment (Render - Recommended)
+## 🌍 Deployment (Vercel)
 
-Render is recommended because it supports **WebSockets** (for real-time syscall feeds) and allows for a more flexible process environment than Vercel.
+This application is configured for deployment on **Vercel** out-of-the-box. The `vercel.json` file dictates the routing and serverless function environment. 
 
-### 1. Simple Blueprint Deployment
-1.  Push your code to **GitHub**.
-2.  Go to [dashboard.render.com](https://dashboard.render.com).
-3.  Click **"New"** > **"Blueprint"**.
-4.  Connect your GitHub repository.
-5.  Render will automatically detect the `render.yaml` file and set up:
-    *   A **PostgreSQL** database (Free).
-    *   A **Web Service** running your Django app.
-    *   Automatic migrations and static file collection.
-
-### 2. Manual Setup (If not using Blueprint)
-*   **Build Command**: `./build.sh`
-*   **Start Command**: `gunicorn syscall_project.wsgi:application`
-*   **Environment Variables**:
-    *   `DATABASE_URL`: Your database connection string.
-    *   `SECRET_KEY`: A long secret string.
+### Deployment Steps:
+1. Ensure your code is pushed to your **GitHub** repository.
+2. Go to [Vercel](https://vercel.com/) and click **Add New Project**.
+3. Import your GitHub repository.
+4. Set the following **Environment Variables** in Vercel:
+    *   `DATABASE_URL`: Your PostgreSQL database connection string (e.g. from Supabase).
+    *   `SECRET_KEY`: A strong Django secret key.
     *   `DEBUG`: `False`
-    *   `ALLOWED_HOSTS`: `*`
+    *   `ALLOWED_HOSTS`: `.vercel.app`
+5. Click **Deploy**.
 
-## 🌍 Alternative: Deployment (Vercel + Supabase)
-*(Note: WebSockets and Live Tracing may not function on Vercel)*
+*(Note: Live Strace execution from the dashboard is limited to the local development environment or traditional VPS instances due to serverless constraints. Uploading/pasting trace files works perfectly on Vercel).*
 
 ## 📸 UI Features
 
