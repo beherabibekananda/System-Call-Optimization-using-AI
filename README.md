@@ -123,19 +123,25 @@ Navigate to **http://localhost:5001**
 - **Username:** `admin`
 - **Password:** `admin`
 
-## 🌍 Deployment (Render Container)
+## 🌍 Deployment (Railway)
 
-This application is fully containerized with **Docker** and is ready to be deployed on Render, which fully supports **WebSockets** (using Daphne) for real-time live tracing.
+This application is ready to be deployed on **Railway**, which perfectly supports long-running processes, **WebSockets** (via Daphne), and PostgreSQL databases out-of-the-box.
 
 ### Deployment Steps:
 1. Ensure your code is pushed to your **GitHub** repository.
-2. Go to [Render Dashboard](https://dashboard.render.com).
-3. Click **New** -> **Blueprint**.
-4. Connect your GitHub repository.
-5. Render will detect the `render.yaml` file and automatically deploy:
-   - A free **PostgreSQL** database.
-   - A **Docker Web Service** running your Django app with Daphne (for WebSocket support).
-6. That's it! Your full-stack application and real-time dashboard will be live.
+2. Go to [Railway](https://railway.app) and create an account or log in.
+3. Click **New Project** -> **Deploy from GitHub repo**.
+4. Select your repository.
+5. Railway will automatically detect the `railway.toml` file, which tells it to:
+   - Run the collectstatic and migration commands (`python manage.py collectstatic --noinput && python manage.py migrate`).
+   - Run the Daphne server on the provided `$PORT` for WebSocket support.
+6. **Add a Database**: Right-click on your project canvas -> New -> Database -> Add PostgreSQL.
+7. Under your Django app's **Variables** tab in Railway, ensure you have:
+   - `DATABASE_URL` (Railway provides this automatically by linking the Postgres database).
+   - `SECRET_KEY` (Add a strong secret key).
+   - `DEBUG` (Set to `False`).
+   - `ALLOWED_HOSTS` (Set to `*`).
+8. Generate a domain for your service (under the Settings tab), and your full-stack app with real-time Dashboard will be completely live.
 
 ## 📸 UI Features
 

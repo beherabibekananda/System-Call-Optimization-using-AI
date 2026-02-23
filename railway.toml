@@ -1,0 +1,6 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "python manage.py collectstatic --noinput && python manage.py migrate"
+
+[deploy]
+startCommand = "daphne -b 0.0.0.0 -p $PORT syscall_project.asgi:application"
