@@ -407,6 +407,11 @@ async function loadInitialData() {
         // Run a quick analysis for dashboard data
         runQuickAnalysis();
 
+        // Automatically start real-time monitoring on load
+        setTimeout(() => {
+            startMonitoring();
+        }, 1000); // Small delay to wait for socket connection
+
     } catch (error) {
         console.error('Failed to load initial data:', error);
     }

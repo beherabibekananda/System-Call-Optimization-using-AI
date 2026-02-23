@@ -95,9 +95,15 @@ class SyscallAnalyzer:
         if "process_type_encoded" in df.columns:
             feature_cols.append("process_type_encoded")
 
-        self.feature_columns = feature_cols
+        if fit:
+            self.feature_columns = feature_cols
+        else:
+            # If making a prediction but feature_columns has features we don't have, add them
+            for col in self.feature_columns:
+                if col not in df.columns:
+                    df[col] = 0
 
-        X = df[feature_cols].fillna(0)
+        X = df[self.feature_columns if not fit else feature_cols].fillna(0)
 
         if fit:
             X_scaled = self.scaler.fit_transform(X)

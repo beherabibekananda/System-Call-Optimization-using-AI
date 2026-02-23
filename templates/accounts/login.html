@@ -4,70 +4,443 @@
 {% block title %}Login | SysCall AI{% endblock %}
 
 {% block content %}
-<div class="flex-center" style="min-height: 60vh;">
-    <div class="card" style="width: 100%; max-width: 450px; padding: var(--space-xl);">
-        <div class="card-header" style="text-align: center; margin-bottom: var(--space-xl);">
-            <div>
-                <div class="card-title" style="font-size: 2rem;">Welcome Back</div>
-                <div class="card-subtitle">Login to analyze your system calls</div>
+<div class="animated-login-container">
+    <div class="glass-card fade-in-up">
+        <div class="card-header">
+            <div class="icon-container pulse-animation">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" class="neon-icon">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
             </div>
+            <h2 class="card-title glow-text">Welcome Back</h2>
+            <p class="card-subtitle typewriter">Login to analyze your system calls</p>
         </div>
 
-        <form method="post" action="{% url 'login' %}">
+        <form method="post" action="{% url 'login' %}" class="staggered-form">
             {% csrf_token %}
 
-            <div class="mb-3">
-                <label for="id_username" class="metric-label"
-                    style="display: block; margin-bottom: 8px;">Username</label>
-                {{ form.username }}
+            <div class="form-group slide-in-1">
+                <label for="id_username" class="animated-label">Username</label>
+                <div class="input-wrapper">
+                    {{ form.username }}
+                    <div class="input-highlight"></div>
+                </div>
             </div>
 
-            <div class="mb-4">
-                <label for="id_password" class="metric-label"
-                    style="display: block; margin-bottom: 8px;">Password</label>
-                {{ form.password }}
+            <div class="form-group slide-in-2">
+                <label for="id_password" class="animated-label">Password</label>
+                <div class="input-wrapper">
+                    {{ form.password }}
+                    <div class="input-highlight"></div>
+                </div>
             </div>
 
-            <div class="mb-4 flex-between" style="align-items: center;">
-                <label class="text-secondary"
-                    style="font-size: 0.9rem; display: flex; align-items: center; cursor: pointer;">
+            <div class="form-options slide-in-3">
+                <label class="remember-checkbox">
                     {{ form.remember_me }}
-                    <span style="margin-left: 8px;">Remember me</span>
+                    <span class="checkmark"></span>
+                    <span class="remember-text">Remember me</span>
                 </label>
             </div>
 
-            <button type="submit" class="btn btn-primary"
-                style="width: 100%; padding: 12px; font-size: 1.1rem; margin-bottom: 20px;">
-                Authenticate
+            <button type="submit" class="btn-animated slide-in-4">
+                <span>Authenticate</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" class="arrow-icon">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
             </button>
         </form>
 
-        <div class="text-center">
-            <p class="text-muted">Don't have an account?
-                <a href="{% url 'register' %}"
-                    style="color: var(--neon-cyan); text-decoration: none; font-weight: 500;">Register Now</a>
+        <div class="footer-text slide-in-5">
+            <p>Don't have an account?
+                <a href="{% url 'register' %}" class="register-link">Register Now</a>
             </p>
         </div>
     </div>
 </div>
 
 <style>
-    .form-input {
-        width: 100%;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        color: var(--text-primary);
-        font-family: inherit;
-        transition: all 0.3s ease;
-        outline: none;
+    /* Animated Login Specific Styles */
+    .animated-login-container {
+        min-height: 75vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        perspective: 1000px;
     }
 
-    .form-input:focus {
-        border-color: var(--neon-cyan);
-        background: rgba(255, 255, 255, 0.07);
-        box-shadow: 0 0 15px rgba(0, 245, 255, 0.1);
+    .glass-card {
+        width: 100%;
+        max-width: 440px;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(0, 245, 255, 0.15);
+        border-radius: 24px;
+        padding: 3rem 2.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+            0 0 30px rgba(0, 245, 255, 0.05) inset;
+        transform-style: preserve-3d;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at center, rgba(0, 245, 255, 0.05) 0%, transparent 50%);
+        pointer-events: none;
+        animation: spin 20s linear infinite;
+    }
+
+    .card-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .icon-container {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, rgba(0, 245, 255, 0.1) 0%, rgba(0, 100, 255, 0.1) 100%);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid rgba(0, 245, 255, 0.3);
+        box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
+    }
+
+    .neon-icon {
+        color: var(--neon-cyan, #00f5ff);
+        filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.5));
+    }
+
+    .card-title.glow-text {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.3), 0 0 20px rgba(0, 245, 255, 0.3);
+        letter-spacing: -0.5px;
+    }
+
+    .card-subtitle {
+        color: var(--text-secondary, #94a3b8);
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* Form Styles */
+    .staggered-form {
+        position: relative;
+        z-index: 1;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .animated-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary, #94a3b8);
+        font-weight: 500;
+        transform: translateY(0);
+        transition: all 0.3s ease;
+    }
+
+    .input-wrapper {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        padding: 14px 16px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #fff;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .input-highlight {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--neon-cyan, #00f5ff);
+        transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: 0 -2px 10px rgba(0, 245, 255, 0.5);
+    }
+
+    .input-wrapper input:focus {
+        background: rgba(0, 245, 255, 0.03);
+        border-color: rgba(0, 245, 255, 0.3);
+    }
+
+    .input-wrapper input:focus~.input-highlight {
+        width: 100%;
+    }
+
+    /* Checkbox Styles */
+    .form-options {
+        margin-bottom: 2rem;
+    }
+
+    .remember-checkbox {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        color: var(--text-secondary, #94a3b8);
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+    }
+
+    .remember-checkbox:hover {
+        color: #fff;
+    }
+
+    .remember-checkbox input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .checkmark {
+        height: 18px;
+        width: 18px;
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        margin-right: 10px;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .remember-checkbox:hover input~.checkmark {
+        border-color: var(--neon-cyan, #00f5ff);
+    }
+
+    .remember-checkbox input:checked~.checkmark {
+        background-color: var(--neon-cyan, #00f5ff);
+        border-color: var(--neon-cyan, #00f5ff);
+        box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+    }
+
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 6px;
+        top: 2px;
+        width: 4px;
+        height: 10px;
+        border: solid #000;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .remember-checkbox input:checked~.checkmark:after {
+        display: block;
+    }
+
+    /* Button Styles */
+    .btn-animated {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .btn-animated::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, #3a7bd5 0%, #00d2ff 100%);
+        opacity: 0;
+        z-index: -1;
+        transition: opacity 0.4s ease;
+    }
+
+    .btn-animated:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
+    }
+
+    .btn-animated:hover::before {
+        opacity: 1;
+    }
+
+    .btn-animated:active {
+        transform: translateY(1px);
+    }
+
+    .arrow-icon {
+        width: 18px;
+        height: 18px;
+        transition: transform 0.3s ease;
+    }
+
+    .btn-animated:hover .arrow-icon {
+        transform: translateX(4px);
+    }
+
+    /* Footer */
+    .footer-text {
+        text-align: center;
+        margin-top: 2rem;
+        position: relative;
+        z-index: 1;
+        color: var(--text-secondary, #94a3b8);
+        font-size: 0.95rem;
+    }
+
+    .register-link {
+        color: var(--neon-cyan, #00f5ff);
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 5px;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .register-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 1px;
+        bottom: -2px;
+        left: 0;
+        background-color: var(--neon-cyan, #00f5ff);
+        transition: width 0.3s ease;
+    }
+
+    .register-link:hover {
+        text-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
+    }
+
+    .register-link:hover::after {
+        width: 100%;
+    }
+
+    /* Animations */
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px) translateZ(0);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) translateZ(0);
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes pulseShadow {
+        0% {
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+        }
+
+        50% {
+            box-shadow: 0 0 25px rgba(0, 245, 255, 0.6);
+        }
+
+        100% {
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    }
+
+    .pulse-animation {
+        animation: pulseShadow 2s infinite ease-in-out;
+    }
+
+    .slide-in-1 {
+        opacity: 0;
+        animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.3s;
+    }
+
+    .slide-in-2 {
+        opacity: 0;
+        animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.4s;
+    }
+
+    .slide-in-3 {
+        opacity: 0;
+        animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.5s;
+    }
+
+    .slide-in-4 {
+        opacity: 0;
+        animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.6s;
+    }
+
+    .slide-in-5 {
+        opacity: 0;
+        animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.7s;
     }
 </style>
 {% endblock %}

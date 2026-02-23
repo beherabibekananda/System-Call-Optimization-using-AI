@@ -59,7 +59,7 @@ An **AI-powered system call analysis and optimization platform** that uses machi
 ```
 System Call/
 ├── backend/
-│   ├── app.py                 # Flask API server
+│   ├── app.py                 # API server (Legacy/Standalone)
 │   ├── ml_models/
 │   │   ├── syscall_analyzer.py     # ML-based syscall analysis
 │   │   └── performance_predictor.py # Performance prediction models
@@ -224,4 +224,4 @@ MIT License - Feel free to use and modify!
 
 ---
 
-**Built with ❤️ using Python, Flask, and Scikit-Learn**
+**Built with ❤️ using Python, Django, and Scikit-Learn**

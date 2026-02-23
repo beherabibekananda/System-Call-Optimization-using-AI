@@ -10,7 +10,7 @@ from .models import StraceAnalysis, ExportHistory
 
 # Import existing ML and Strace processing logic
 import sys
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = settings.BASE_DIR
 sys.path.append(os.path.join(BASE_DIR, 'backend'))
 
 from ml_models.syscall_analyzer import SyscallAnalyzer
@@ -54,9 +54,20 @@ strace_runner = StraceRunner()
 script_exporter = ScriptExporter()
 
 def ensure_models_trained():
-    # Similar logic to Flask's ensure_models_trained if necessary
-    # For now, we assume the .pkl files exist from previous sessions
-    pass
+    global analyzer
+    if not analyzer.is_trained:
+        model_path = os.path.join(BASE_DIR, 'backend', 'trained_models')
+        try:
+            analyzer.load_models(model_path)
+        except Exception:
+            print("Training models...")
+            sys.path.append(os.path.join(BASE_DIR, 'backend'))
+            from data.syscall_data_generator import SyscallDataGenerator
+            generator = SyscallDataGenerator()
+            df = generator.generate_training_dataset(2000)
+            analyzer.train(df)
+            os.makedirs(model_path, exist_ok=True)
+            analyzer.save_models(model_path)
 
 @csrf_exempt
 @login_required
@@ -93,6 +104,7 @@ def parse_strace_file(request):
             }, status=400)
         
         # Run ML analysis
+        ensure_models_trained()
         recommendations, analysis = analyzer.get_optimization_recommendations(df)
         
         # Save results to the record
@@ -145,6 +157,7 @@ def parse_strace_text(request):
             }, status=400)
         
         # Run ML analysis
+        ensure_models_trained()
         recommendations, analysis = analyzer.get_optimization_recommendations(df)
         
         # Save analysis record
@@ -209,6 +222,7 @@ def load_strace_sample(request):
         df = strace_parser.parse_file(filepath)
         parse_stats = strace_parser.get_parse_stats()
         
+        ensure_models_trained()
         recommendations, analysis = analyzer.get_optimization_recommendations(df)
         
         return json_res({
@@ -289,6 +303,7 @@ def api_analyze(request):
         generator = SyscallDataGenerator()
         df = generator.generate_syscall_sequence(num_calls, process_type)
         
+        ensure_models_trained()
         recommendations, analysis = analyzer.get_optimization_recommendations(df)
         
         return json_res({
@@ -308,13 +323,22 @@ def api_predict(request):
     
     try:
         data = json.loads(request.body)
-        from ml_models.performance_predictor import PerformancePredictor
-        predictor = PerformancePredictor()
-        
-        results = predictor.generate_optimization_plan(
+        from data.syscall_data_generator import SyscallDataGenerator
+        generator = SyscallDataGenerator()
+        df = generator.generate_benchmark_data(
             num_processes=data.get('num_processes', 5),
             calls_per_process=data.get('calls_per_process', 500)
         )
+        
+        from ml_models.performance_predictor import PerformancePredictor
+        predictor = PerformancePredictor()
+        try:
+            predictor.load_models(os.path.join(BASE_DIR, 'backend', 'trained_models'))
+        except Exception:
+            predictor.train(df)
+            predictor.save_models(os.path.join(BASE_DIR, 'backend', 'trained_models'))
+        
+        results = predictor.get_scheduling_recommendations(df)
         
         return json_res({
             'success': True,
@@ -371,6 +395,7 @@ def api_strace_run(request):
         df = strace_parser.parse_file(output_file)
         parse_stats = strace_parser.get_parse_stats()
         
+        ensure_models_trained()
         recommendations, analysis = analyzer.get_optimization_recommendations(df)
         
         # Save record
